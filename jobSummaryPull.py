@@ -72,29 +72,29 @@ def gatherResults(browser, startNum, jobTitle):
     for resultBox in resultBoxes:
         title, company, location, href, timePosted, jobID = '', '', '', '', '', ''
         jobID = resultBox.get_attribute('data-jk')
-        print(jobID)
-        if any(JobResult.ID == jobID for JobResult in results):
-            continue
-        if jobID == lastResultBoxID:
-            #I do not currently know what the issue is with the last result erroring here.
-            continue
-        titleAndHref = resultBox.find_element_by_tag_name('h2')
-        title = titleAndHref.text
-        title = title.replace('-new','')
-        print(title)
-        href = titleAndHref.find_element_by_tag_name('a').get_attribute('href')
-        print(href)
-        company = resultBox.find_element_by_class_name('company').text
-        print(company)
-        location = resultBox.find_element_by_class_name('location').text
-        print(location)
-        timePosted = resultBox.find_element_by_class_name('date').text
-        print(timePosted)
-        buildResult(jobTitle, title, company, location, href, timePosted, jobID)
-        if counter == numResults:
-            browser.get(browser.current_url + '&start=' + startNum)
-            startNum += 10
-            gatherResults(browser, startNum, jobTitle)
+        try:
+            print(jobID, lastResultBoxID)
+            if any(JobResult.ID == jobID for JobResult in results):
+                continue
+            titleAndHref = resultBox.find_element_by_tag_name('h2')
+            title = titleAndHref.text
+            title = title.replace('-new','')
+            print(title)
+            href = titleAndHref.find_element_by_tag_name('a').get_attribute('href')
+            print(href)
+            company = resultBox.find_element_by_class_name('company').text
+            print(company)
+            location = resultBox.find_element_by_class_name('location').text
+            print(location)
+            timePosted = resultBox.find_element_by_class_name('date').text
+            print(timePosted)
+            buildResult(jobTitle, title, company, location, href, timePosted, jobID)
+            if jobID == lastResultBoxID:
+                browser.get(browser.current_url + '&start=' + startNum)
+                startNum += 10
+                gatherResults(browser, startNum, jobTitle)
+        except:
+            print('Could not complete for this job ID', jobID)
         
 def checkLocationBlank(browser):
     inputElems = browser.find_elements_by_tag_name('input')
