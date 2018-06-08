@@ -9,13 +9,16 @@ import pandas as pd
 import pickle
 
 class JobResult(object):
-    def __init__(self, t, c, l, h, p, i):
+    def __init__(self, s, t, c, l, h, p, i):
+        self.searchedTitle = s
         self.title = t
         self.company = c
         self.location = l
         self.href = h
         self.posted = p
         self.ID = i
+    def getSearch(self):
+        return self.searchedTitle
     def getTitle(self):
         return self.title
     def getCompany(self):
@@ -45,7 +48,7 @@ def main(browser, link, startNum):
         searchJob(browser, jobTitle)
         checkPopup(browser)
         checkSort(browser)
-        gatherResults(browser, startNum)
+        gatherResults(browser, startNum, jobTitle)
         
 def searchJob(browser, jobTitle):
     modJobTitle = editJobTitle(jobTitle)
@@ -61,7 +64,7 @@ def searchJob(browser, jobTitle):
             break
     WebDriverWait(browser, delay).until(EC.url_contains(modJobTitle))
     
-def gatherResults(browser, startNum):
+def gatherResults(browser, startNum, jobTitle):
     resultBoxes = browser.find_elements_by_xpath("//div[@class='row result clickcard']")
     lastResultBoxID = browser.find_element_by_xpath("//div[@class='lastRow row result clickcard']").get_attribute('data-jk')
     numResults = len(resultBoxes)
@@ -87,11 +90,11 @@ def gatherResults(browser, startNum):
         print(location)
         timePosted = resultBox.find_element_by_class_name('date').text
         print(timePosted)
-        buildResult(title, company, location, href, timePosted, jobID)
+        buildResult(jobTitle, title, company, location, href, timePosted, jobID)
         if counter == numResults:
             browser.get(browser.current_url + '&start=' + startNum)
             startNum += 10
-            gatherResults(browser, startNum)
+            gatherResults(browser, startNum, jobTitle)
         
 def checkLocationBlank(browser):
     inputElems = browser.find_elements_by_tag_name('input')
@@ -125,8 +128,8 @@ def editJobTitle(jobTitle):
             newJobTitle = newJobTitle + '+' + jobTitleSplit[wordNum]
     return newJobTitle
 
-def buildResult(title, company, location, href, timePosted, jobID):
-    results.append(JobResult(title, company, location, href, timePosted, jobID))
+def buildResult(jobTitle, title, company, location, href, timePosted, jobID):
+    results.append(JobResult(jobTitle, title, company, location, href, timePosted, jobID))
     print(results)
 
 links = ['https://www.indeed.com']
@@ -138,3 +141,10 @@ results = []
 delay = 5
 startNum = 0
 initialize()
+
+""" TODO
+Fix last result issue
+Compile all results into database
+Set up machine learning algorithm to parse job summary
+Generate cover letter text
+"""
