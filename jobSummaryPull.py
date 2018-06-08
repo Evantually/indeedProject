@@ -49,6 +49,7 @@ def main(browser, link, startNum):
         checkPopup(browser)
         checkSort(browser)
         gatherResults(browser, startNum, jobTitle)
+    pushToTable(results)
         
 def searchJob(browser, jobTitle):
     modJobTitle = editJobTitle(jobTitle)
@@ -65,7 +66,7 @@ def searchJob(browser, jobTitle):
     WebDriverWait(browser, delay).until(EC.url_contains(modJobTitle))
     
 def gatherResults(browser, startNum, jobTitle):
-    resultBoxes = browser.find_elements_by_xpath("//div[@class='row result clickcard']")
+    resultBoxes = browser.find_elements_by_xpath("//div[contains(@class='row result clickcard')]")
     lastResultBoxID = browser.find_element_by_xpath("//div[@class='lastRow row result clickcard']").get_attribute('data-jk')
     numResults = len(resultBoxes)
     counter = 0
@@ -88,6 +89,15 @@ def gatherResults(browser, startNum, jobTitle):
             print(location)
             timePosted = resultBox.find_element_by_class_name('date').text
             print(timePosted)
+            if timePosted != 'Just posted' or 'Today':
+                if 'days' in timePosted:
+                    daysAgo = timePosted[:len(timePosted)-9]
+                    print(daysAgo)
+                else:
+                    daysAgo = timeposted[:1]
+                    print(daysAgo)
+                if daysAgo >= 5:
+                    continue
             buildResult(jobTitle, title, company, location, href, timePosted, jobID)
             if jobID == lastResultBoxID:
                 browser.get(browser.current_url + '&start=' + startNum)
@@ -131,6 +141,9 @@ def editJobTitle(jobTitle):
 def buildResult(jobTitle, title, company, location, href, timePosted, jobID):
     results.append(JobResult(jobTitle, title, company, location, href, timePosted, jobID))
     print(results)
+    
+def pushToTable(results):
+    madeUpVar = 1
 
 links = ['https://www.indeed.com']
 jobTitles = ['data scientist','machine learning engineer','data analyst','researcher','software developer','software engineer']
