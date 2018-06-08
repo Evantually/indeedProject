@@ -26,7 +26,7 @@ class JobResult(object):
     def getLocation(self):
         return self.location
     def getHref(self):
-        return self.Href
+        return self.href
     def getPosted(self):
         return self.posted
     def getID(self):
@@ -66,10 +66,8 @@ def searchJob(browser, jobTitle):
     WebDriverWait(browser, delay).until(EC.url_contains(modJobTitle))
     
 def gatherResults(browser, startNum, jobTitle):
-    resultBoxes = browser.find_elements_by_xpath("//div[contains(@class='row result clickcard')]")
+    resultBoxes = browser.find_elements_by_xpath("//div[contains(@class,'row result clickcard')]")
     lastResultBoxID = browser.find_element_by_xpath("//div[@class='lastRow row result clickcard']").get_attribute('data-jk')
-    numResults = len(resultBoxes)
-    counter = 0
     for resultBox in resultBoxes:
         title, company, location, href, timePosted, jobID = '', '', '', '', '', ''
         jobID = resultBox.get_attribute('data-jk')
@@ -89,12 +87,12 @@ def gatherResults(browser, startNum, jobTitle):
             print(location)
             timePosted = resultBox.find_element_by_class_name('date').text
             print(timePosted)
-            if timePosted != 'Just posted' or 'Today':
+            if not any(post in timePosted for post in postTimes):
                 if 'days' in timePosted:
                     daysAgo = timePosted[:len(timePosted)-9]
                     print(daysAgo)
                 else:
-                    daysAgo = timeposted[:1]
+                    daysAgo = timePosted[:1]
                     print(daysAgo)
                 if daysAgo >= 5:
                     continue
@@ -143,10 +141,14 @@ def buildResult(jobTitle, title, company, location, href, timePosted, jobID):
     print(results)
     
 def pushToTable(results):
-    madeUpVar = 1
+    df = pd.DataFrame([[getattr(i,j) for j in columns] for i in results], columns=columns)
+    print(df)
+    df.to_hdf('joblistings.h5','df',mode='w',format='table',data_columns=True)
 
 links = ['https://www.indeed.com']
 jobTitles = ['data scientist','machine learning engineer','data analyst','researcher','software developer','software engineer']
+postTimes = ['Just posted', 'Today']
+columns=['searchedTitle','title','company','location','href','posted','ID']
 titles = []
 companies = []
 locations = []
@@ -156,7 +158,6 @@ startNum = 0
 initialize()
 
 """ TODO
-Fix last result issue
 Compile all results into database
 Set up machine learning algorithm to parse job summary
 Generate cover letter text
